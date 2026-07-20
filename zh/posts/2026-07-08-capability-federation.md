@@ -624,3 +624,13 @@ Connector 的价值不再只是：如何读取数据。其正在变得越来越�
 因此，围绕 Capability 的暴露、组合与利用，将很可能成为下一阶段数据基础设施演进的重要主题。
 
 而这，也许正是 Lakehouse 与 AI Data Infra 时代，Federated Engine 的又一次战略机会所在。
+
+---
+
+## 欢迎交流
+
+本文基于作者当前的理解与实践经验整理而成，难免存在疏漏或值得进一步探讨之处。
+
+如果您对文中的观点有不同看法，发现任何问题，或有相关实践经验，欢迎通过 [GitHub Issue](https://github.com/hantangwangd/hantangwangd.github.io/issues/new) 与作者交流讨论。
+
+期待与更多同行围绕数据基础设施相关技术展开交流，分享实践经验，共同学习、共同进步。
