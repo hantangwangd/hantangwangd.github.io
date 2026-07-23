@@ -8,6 +8,7 @@ My work focuses on distributed query engines and lakehouse architectures, with a
 
 ## Articles & Perspectives
 
+- **[Presto vs Spark：执行范式差异如何决定响应速度与数据规模上限](./zh/posts/2026-07-23-presto-spark-paradigm-comparison.md)** — *Presto vs. Spark: How Execution Paradigm Divergence Determines Responsiveness and Scalability Ceilings*
 
 - **[能力联邦：Presto的一种可能演进方向](./zh/posts/2026-07-08-capability-federation.md)** — *Ability Federation: A Potential Evolution Path for Presto*
 
