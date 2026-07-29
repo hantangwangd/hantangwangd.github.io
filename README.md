@@ -20,7 +20,9 @@ This site shares my insights and deep dives into the architecture and implementa
 
 - **[Presto 查询引擎内核详解：AddLocalExchanges——基于数据流属性约束的本地执行规划](./zh/posts/2026-07-27-add-local-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddLocalExchanges — Local Execution Planning Through Dataflow Property Enforcement*
 
-- **[Presto 查询引擎内核详解：Worker 本地执行模型——从物理计划到可调度执行单元](./zh/posts/2026-07-28-worker-local-execution-model.md)** — *Presto Query Engine Kernel Deep Dive: AddLocalExchanges — Worker Local Execution Model — From Physical Plans to Schedulable Execution Units*
+- **[Presto 查询引擎内核详解：Worker 本地执行模型——从物理计划到可调度执行单元](./zh/posts/2026-07-28-worker-local-execution-model.md)** — *Presto Query Engine Kernel Deep Dive: Worker Local Execution Model — From Physical Plans to Schedulable Execution Units*
+
+- **[Presto 查询引擎内核详解：SQL Analyzer 语义分析机制——从 AST 到 Analysis](./zh/posts/2026-07-30-analyzer-from-ast-to-analysis.md)** — *Presto Query Engine Kernel Deep Dive: SQL Analyzer — From AST to Analysis*
 
 ---
 

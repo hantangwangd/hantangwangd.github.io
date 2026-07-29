@@ -242,3 +242,14 @@ Presto 资源管理的本质模型可以抽象为三层：
 > 闭环控制系统（Closed-loop Control System）
 
 最后用用一段话概括，Presto 的资源管理体系通过层次化内存预留、Future-based 阻塞机制、Revocable spill 内存回收机制、全局 OOM 仲裁等机制，共同实现在不可预知负载下的稳定执行能力。和resource manager体系相配合，共同保障了Presto在多租户、高并发场景下的性能和稳定性。
+
+
+---
+
+## 欢迎交流
+
+本文基于作者当前的理解与实践经验整理而成，难免存在疏漏或值得进一步探讨之处。
+
+如果您对文中的观点有不同看法，发现任何问题，或有相关实践经验，欢迎通过 [GitHub Issue](https://github.com/hantangwangd/hantangwangd.github.io/issues/new) 与作者交流讨论。
+
+期待与更多同行围绕数据基础设施相关技术展开交流，分享实践经验，共同学习、共同进步。

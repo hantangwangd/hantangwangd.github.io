@@ -249,7 +249,3 @@ Spark 则选择了 **stage-based materialization** 执行路径，通过 Shuffle
 如果您对文中的观点有不同看法，发现任何问题，或有相关实践经验，欢迎通过 [GitHub Issue](https://github.com/hantangwangd/hantangwangd.github.io/issues/new) 与作者交流讨论。
 
 期待与更多同行围绕数据基础设施相关技术展开交流，分享实践经验，共同学习、共同进步。
-
-
-
-Presto 的低延迟优势来自两个层面的设计选择：查询内部采用 pipeline streaming 减少等待和物化开销，Worker 内部采用 Driver 级协作调度降低并发查询之间的资源阻塞。
