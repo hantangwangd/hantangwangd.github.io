@@ -25,6 +25,7 @@ This site shares my insights and deep dives into the architecture and implementa
 - **[Presto 查询引擎内核详解：SQL Analyzer 语义分析机制——从 AST 到 Analysis](./zh/posts/2026-07-30-analyzer-from-ast-to-analysis.md)** — *Presto Query Engine Kernel Deep Dive: SQL Analyzer — From AST to Analysis*
 
 - **[Presto 查询引擎内核详解：基于多级反馈队列思想的 Worker 调度模型](./zh/posts/2026-08-02-worker-scheduling-model-based-on-mlfq.md)** — *Presto Query Engine Kernel Deep Dive: Worker Scheduling Model Based on Multi-Level Feedback Queue Principles*
+
 ---
 
 ## License

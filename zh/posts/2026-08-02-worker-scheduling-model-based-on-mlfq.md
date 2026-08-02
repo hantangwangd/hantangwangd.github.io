@@ -195,7 +195,7 @@ List<CounterStat> selectedLevelCounters;
 
 ### 3.1 层级选择策略：pollSplit()
 
-这是整个调度器最核心的方法。算法的核心思想是：首先选择最"亏欠"的层级（实际调度时间与目标调度时间比率最高的层级），然后在该层中取出优先级最高的 Split。
+这是整个调度器最核心的方法。算法的核心思想是：首先选择最"亏欠"的层级（目标调度时间与实际调度时间比率最高的层级），然后在该层中取出优先级最高的 Split。
 
 ```
 private PrioritizedSplitRunner pollSplit() {
@@ -253,12 +253,12 @@ private long getLevel0TargetTime() {
 设计意图：
 
 - 所有层级以 Level 0 为统一基准进行比较
-- 高层级的调度时间贡献被放大（乘以 M^level），保证其不会因绝对值小而被忽略
+- 高层级的实际调度时间贡献被放大（乘以 M^level），保证其不会因绝对值小而被忽略
 - 取最大值确保所有层级的目标至少达到当前最高折算值
 
 直观理解：
 
-> level0TargetTime 表示"level0TargetTime 表示将不同层级执行时间统一折算到 Level 0 后，当前消耗最大的那一层所对应的值"，用于比较各层调度状态的基准值。公式为：
+> level0TargetTime 表示"将不同层级执行时间统一折算到 Level 0 后，当前消耗最大的那一层所对应的值"，用于比较各层调度状态的基准值。公式为：
 
 ```
 level0TargetTime = max(L0, L1×M, L2×M², L3×M³, L4×M⁴)
@@ -313,11 +313,13 @@ public Priority updatePriority(Priority oldPriority,
 关键设计决策：
 
 - 时间贡献上限：LEVEL_CONTRIBUTION_CAP = 30秒，防止异常慢任务一次贡献过多时间扭曲层级统计。
-- 跨层时间分摊：假设一个 Split 一次运行了 120 秒，直接从 Level 0 跳到 Level 4。如果将所有时间都记在 Level 4，会导致该层统计爆炸。正确做法是模拟逐级晋升，将时间分摊到经过的每一层：
+- 跨层时间分摊：假设一个 Split 一次运行了 350 秒，直接从 Level 0 跳到 Level 4。如果将所有时间都记在 Level 4，会导致该层统计爆炸。正确做法是模拟逐级晋升，将时间分摊到经过的每一层：
 
 ```
-Level 0 → Level 1 → Level 2 → Level 3 → Level 4
-  (1s)      (9s)      (50s)     (240s)    (剩余)
+假设本次 Split 执行的时间贡献为： lc = Math.min(quantaNanos, LEVEL_CONTRIBUTION_CAP)
+
+Level 0   ----→  Level 1   ----→  Level 2   ----→  Level 3   ----→  Level 4
+min(1s, lc)      min(9s, lc)      min(50s, lc)     min(240s, lc)    (剩余 lc)
 ```
 
 - 层内优先级值递增：每轮调度后 levelPriority 增加 quantaNanos。由于该值越小表示优先级越高，因此执行时间越长的执行实体，其在同层PriorityQueue中的相对排序逐渐靠后。
@@ -397,24 +399,28 @@ Query A 虽然处于较低 Level，但仍然可以通过层级间的公平调度
 
 ### 4.1 层级优先级基准维护：levelMinPriority
 
-levelMinPriority 用于记录每个调度层级当前已经推进到的优先级基准。
+levelMinPriority 用于记录每个调度层级当前已经推进到的优先级基准，其作用为：
 
-```
+- 防止重新进入某层的 SplitRunner 因携带过旧的 levelPriority 值，在当前层级竞争中获得非预期优势。
+- 避免长时间阻塞后恢复的任务立即连续抢占同层其他任务的执行机会。
+
+当一个任务首次进入到一个之前为空的层级时（其默认 levelMinPriority[level] 值为 -1），记录当前任务的调度时间作为基准：
+
+```java
 public long getLevelMinPriority(int level, long taskThreadUsageNanos) {
     levelMinPriority[level].compareAndSet(-1, taskThreadUsageNanos);
     return levelMinPriority[level].get();
 }
 ```
 
-作用：
+此外，每次成功调度一个 SplitRunner 后，MultiLevelSplitQueue 会使用该 SplitRunner 的 levelPriority 更新对应层级的基准值，使其随着调度过程不断前移。
 
-- 防止重新进入某层的 SplitRunner 因携带过旧的 levelPriority 值，在当前层级竞争中获得非预期优势。
-- 避免长时间阻塞后恢复的任务立即连续抢占同层其他任务的执行机会。
-- 当一个任务首次进入到一个之前为空的层级时，记录当前任务的调度时间作为基准
+```
+int selectedLevel = result.getPriority().getLevel();
+levelMinPriority[selectedLevel].set(result.getPriority().getLevelPriority());
+```
 
-更新时机：每次成功调度一个 SplitRunner 后，MultiLevelSplitQueue 会使用该 SplitRunner 的 levelPriority 更新对应层级的基准值，使其随着调度过程不断前移。
-
-## 4.2 Blocked SplitRunner 恢复厚的优先级重置
+## 4.2 Blocked SplitRunner 恢复后的优先级重置
 
 当 SplitRunner 因为 IO、网络或者其他原因进入 Blocked 状态时，其并不会继续消耗 Worker CPU 时间。因此，当它重新恢复 Runnable 状态时，原有的 levelPriority 可能已经不能完全反映当前层级中的公平竞争关系。
 
@@ -453,7 +459,8 @@ MultiLevelSplitQueue 并不是一个简单的优先级队列，而是一个面�
 - MLFQ-like 分层反馈机制：根据 SplitRunner 执行历史动态调整调度优先级；
 - 加权公平调度思想：通过目标调度比例控制不同层级之间的资源分配；
 - 时间分摊机制：限制单个任务对调度状态的影响；
-- 补偿与校准机制：通过优先级更新和阻塞恢复处理避免长期不公平。
+- 补偿与校准机制：通过优先级更新和阻塞恢复处理避免长期不公平；
+- 执行实体与公平语义实体分离：以 SplitRunner 作为实际调度执行单位，同时通过更高层级语义实体保证资源公平。
 
 ### 5.2 为什么选择 MLFQ-like 调度模型
 
@@ -476,12 +483,13 @@ MultiLevelSplitQueue 并不是一个简单的优先级队列，而是一个面�
 
 Presto 的 MultiLevelSplitQueue 设计体现了以下思想：
 
-思想	说明
-分层反馈	根据执行历史动态调整调度优先级
-公平与效率平衡	在避免任务饥饿的同时优化短查询响应
-鲁棒性设计	通过多种校准机制处理异常执行状态
-自适应调度	根据实际运行行为动态调整调度策略
-场景驱动	针对 Interactive SQL workload 进行优化
+| 思想 | 说明 |
+| :--- | :--- |
+| 分层反馈 | 根据执行历史动态调整调度优先级 |
+| 公平与效率平衡 | 在避免任务饥饿的同时优化短查询响应 |
+| 鲁棒性设计 | 通过多种校准机制处理异常执行状态 |
+| 自适应调度 | 根据实际运行行为动态调整调度策略 |
+| 场景驱动 | 针对 Interactive SQL workload 进行优化 |
 
 最终，MultiLevelSplitQueue 体现的是一种场景驱动的调度设计：
 
