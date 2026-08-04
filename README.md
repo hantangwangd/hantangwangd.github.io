@@ -16,6 +16,8 @@ This site shares my insights and deep dives into the architecture and implementa
 
 - **[Presto vs Spark：执行范式差异如何决定响应速度与数据规模上限](./zh/posts/2026-07-23-presto-spark-paradigm-comparison.md)** — *Presto vs. Spark: How Execution Paradigm Divergence Determines Responsiveness and Scalability Ceilings*
 
+- **[Presto 查询引擎内核详解：整体架构与查询执行流程](./zh/posts/2026-08-04-whole-architecture-and-query-execution-flow.md)** — *Presto Query Engine Kernel Deep Dive: Overall Architecture and Query Execution Flow*
+
 - **[Presto 查询引擎内核详解：集群资源管理机制解析](./zh/posts/2026-07-24-resource-management-mechanisms.md)** — *Presto Query Engine Kernel Deep Dive: An Analysis of Cluster Resource Management Mechanisms*
 
 - **[Presto 查询引擎内核详解：AddLocalExchanges——基于数据流属性约束的本地执行规划](./zh/posts/2026-07-27-add-local-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddLocalExchanges — Local Execution Planning Through Dataflow Property Enforcement*
