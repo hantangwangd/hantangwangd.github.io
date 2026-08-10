@@ -22,6 +22,8 @@ PrestoDB Committer | Presto-Iceberg Code Owner | Apache Iceberg Contributor
 
 - **[Presto 查询引擎内核详解：整体架构与查询执行流程](./posts/2026-08-04-whole-architecture-and-query-execution-flow.md)** — *Presto Query Engine Kernel Deep Dive: Overall Architecture and Query Execution Flow*
 
+- **[Presto 查询引擎内核详解：分布式规划机制](./posts/2026-08-10-distributed-planning-mechanism.md)** — *Presto Query Engine Kernel Deep Dive: Distributed Planning Mechanism*
+
 - **[Presto 查询引擎内核详解：集群资源管理机制解析](./posts/2026-07-24-resource-management-mechanisms.md)** — *Presto Query Engine Kernel Deep Dive: An Analysis of Cluster Resource Management Mechanisms*
 
 - **[Presto 查询引擎内核详解：AddLocalExchanges——基于数据流属性约束的本地执行规划](./posts/2026-07-27-add-local-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddLocalExchanges — Local Execution Planning Through Dataflow Property Enforcement*
