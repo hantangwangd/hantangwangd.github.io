@@ -118,7 +118,7 @@ SubPlan
 
 因此：
 
-> PlanFragment 不仅描述“这个 Stage 内部执行什么计算”，还定义了该 Stage 在分布式执行过程中的计算逻辑、数据分布语义、输出接口以及执行能力等等信息。
+> PlanFragment 不仅描述“这个 Stage 内部执行什么计算”，还定义了该 Stage 在分布式执行过程中的数据分布语义、输出接口以及执行能力等等信息。
 
 **children 描述当前 Stage 依赖的上游 Stages**
 
@@ -173,7 +173,7 @@ Visitor 遍历 PlanNode
                                          v
 ```
 
-PlanFragmenter 是 Presto 从单节点 Physical Plan 到 Distributed Execution Plan 的关键转换层。它通过识别 Exchange 边界，将连续的计算逻辑转换为由多个 Fragment 组成的 Distributed Plan，并同时确定 Fragment 间的数据交换方式、Partitioning 语义以及执行属性。
+PlanFragmenter 是 Presto 从单体 Physical Plan 到 Distributed Execution Plan 的关键转换层。它通过识别 Exchange 边界，将连续的计算逻辑转换为由多个 Fragment 组成的 Distributed Plan，并同时确定 Fragment 间的数据交换方式、Partitioning 语义以及执行属性。
 
 ## 四、FragmentProperties：Stage 构建过程中的状态模型
 
@@ -196,21 +196,26 @@ FragmentProperties
 |------|----------------------------------|
 | children | 遍历过程中推导出来的当前 Stage 依赖的子 Stage 列表 |
 | partitioningHandle | 遍历过程中推导出来的当前 Stage 内部数据分布方式      |
-| partitioningScheme | 遍历过程中推导出来的当前 Stage 输出数据分布方式      |
+| partitioningScheme | 切分新 Stage 时传递来的当前 Stage 输出数据分布方式 |
 | partitionedSources | 遍历过程中推导出来的当前 Stage 内的数据源         |
 
 其中最容易混淆的是：partitioningHandle 和 partitioningScheme 两个概念。
 
 ### 4.1 PartitioningHandle
 
-PartitioningHandle 描述了当前 Stage 内部计算应该采用什么数据布局。
+PartitioningHandle 描述当前 Stage 所对应的数据分布（Partitioning）语义。
 
-其作用为，决定：
+它并不是一个被直接指定的决定 Stage 数据布局的策略对象，而是 Distributed Planning 过程中，结合 Stage 内各个 PlanNode 的数据分布特性推导出的最终分布语义。
 
-- Task 如何划分数据
-- Source 如何提供数据
+在遍历一个 Stage 所包含的 PlanNode 时，Presto 会结合不同节点的数据分布信息，例如：
 
-Connector、Exchange 以及执行调度阶段都会基于该分布语义进行数据布局和调度决策。
+- TableScan 所对应 Connector 提供的源端 Partitioning；
+- RemoteExchange 所定义的数据交换及 Partitioning 语义；
+- 其他 PlanNode 对上游 Partitioning 的保持、转换或破坏；
+
+逐步推导当前 Stage 的 Partitioning，最终形成该 Stage 对应的 PartitioningHandle。
+
+因此，PartitioningHandle 的核心作用是描述“当前 Stage 的数据应该如何被理解和组织”。后续的分布式规划、Connector 数据访问以及 Exchange 和调度过程，可以基于这一 Partitioning 语义决定数据如何分布以及 Task 如何承载这些数据。
 
 例如：
 
@@ -218,13 +223,18 @@ Connector、Exchange 以及执行调度阶段都会基于该分布语义进行�
 Hive Bucket(customer_id, 8)
 ```
 
-表示数据在源端已按 Hive 桶算法在 customer_id 上分为 8 组，Stage 内部要求沿用此布局进行计算。
+表示当前 Stage 的数据分布语义为：数据按照 Hive Bucket 规则基于 customer_id 被划分为 8 个 Bucket。该语义可以被后续的 Source、Exchange 以及调度逻辑用于判断数据的分布方式和计算并行度。
 
 ### 4.2 PartitioningScheme
 
-PartitioningScheme 描述了当前 Stage 输出数据如何提供给消费者。
+PartitioningScheme 描述当前 Fragment 输出数据时所采用的 Partitioning 方式以及输出布局信息。
 
-其被用于在 Remote Exchange 中与下游 Stage 要求的数据布局保持兼容。
+与 PartitioningHandle 不同，PartitioningScheme 并不是在遍历当前 Stage 内部 PlanNode 的过程中，根据各节点的分布特性独立推导出来的。它与
+	Remote Exchange 所定义的数据交换语义直接相关。
+
+在进行分布式计划切分时，当 PlanFragmenter 跨越一个 Remote Exchange 创建新的 Fragment / Stage 时，会根据该 Exchange 定义的 PartitioningScheme
+	初始化新的 FragmentProperties。因此，PartitioningScheme 本质上是沿着 Exchange 边界传递到新 Fragment 的数据布局描述，并在后续的 Fragment 构建过程中
+	继续参与分布式规划。
 
 例如：
 
@@ -232,12 +242,37 @@ PartitioningScheme 描述了当前 Stage 输出数据如何提供给消费者。
 HASH(order_id, 4)
 ```
 
-表示输出的数据会按 order_id 哈希到 4 个分区，以匹配下游节点的读取方式。
+表示该 Exchange 输出的数据按照 order_id 进行 Hash Partitioning，并划分为 4 个分区。下游 Fragment 将基于这一 Partitioning Scheme 接收和处理
+	来自该 Exchange 的数据。
 
-两者方向不同，可以简单理解为：
+两者更准确的区别可以理解为：
 
-- partitioningHandle 决定：“我怎么接收/处理数据”
-- partitioningScheme 决定：“我怎么输出数据”
+- PartitioningHandle：描述“当前 Fragment 的数据分布语义是什么”
+- PartitioningScheme：描述“跨越 Exchange 后，数据以什么分区方式和布局传递给下游 Fragment”
+
+因此，PartitioningScheme 与 PartitioningHandle 虽然并不是严格的一一对应关系，但二者存在明确的数据分布语义传递关系：
+
+```
+上游 Stage
+    │
+    │ PartitioningScheme
+    ▼
+Remote Exchange
+    │
+    ▼
+RemoteSource
+    │
+    │ 参与下游 Stage 的 Partitioning 推导
+    ▼
+下游 Stage
+    │
+    │ PartitioningHandle
+    ▼
+当前 Stage 的 Partitioning 
+```
+
+也就是说，上游 Stage 的 PartitioningScheme 描述其通过 Remote Exchange 输出数据时所采用的分区方式；当该 Exchange 在下游 Stage 中表现为 RemoteSource 时，
+	这一分布信息会成为下游 Fragment Properties 推导 Partitioning 的输入之一，并最终参与形成下游 Stage 的 PartitioningHandle。
 
 ## 五、Exchange：Stage 切分的核心机制
 
@@ -529,7 +564,7 @@ Grouped Execution 则将执行过程拆分为多个独立的数据组（通常�
 bucket(customer_id, 16)
 ```
 
-但是，在某些执行场景中，Stage 本身已经确定需要特定的数据布局。
+但是，在包含多个 Source 的 Stage 中，Stage 最终需要形成统一的数据分布，而各个 Source 所提供的数据布局未必完全一致。
 
 例如：
 
