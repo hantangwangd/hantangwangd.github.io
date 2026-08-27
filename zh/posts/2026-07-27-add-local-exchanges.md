@@ -185,11 +185,12 @@ public class StreamProperties {
     private final StreamDistribution distribution;
     private final Optional<List<VariableReferenceExpression>> partitioningColumns;
     private final boolean ordered;
+    private final Optional<ActualProperties> otherActualProperties;
     // ...
 }
 ```
 
-其描述的核心问题是：数据分布在多少个数据流中？在哪些列上分区？是否有序？
+其描述的核心问题是：数据分布在多少个数据流中？在哪些列上分区？是否有序？以及每个数据流内部的数据物理特性（如排序、分组，等等）。
 
 ### 3.4 分布类型的本地语义
 
@@ -219,24 +220,27 @@ actual.isPartitionedOn([a, b]) → false
 
 ### 3.6 ActualProperties：完整的物理属性描述
 
-除了分布属性，Planner 还需要知道 Pipeline 内部的属性：
+除了分布属性，Planner 还需要知道数据在单个数据流内部的组织方式，该属性通过 ActualProperties 来描述：
 
 ```java
 public class ActualProperties {
-    private final Optional<DistributionType> global;  // 跨节点分布
-    private final List<LocalProperty<VariableReferenceExpression>> localProperties; // 排序、分组
-    private final List<VariableReferenceExpression> constants; // 常量列
+    private final Global global;    // 描述了全局相关的数据分布特性，包括数据在多个节点之间如何分布，以及数据在多个数据流（切片）之间如何分布
+    private final List<LocalProperty<VariableReferenceExpression>> localProperties; // 描述数据在单个数据流（切片）内部的特性，如排序、分组等
+    private final Map<VariableReferenceExpression, ConstantExpression> constants;   // 常量列描述
     // ...
 }
 ```
 
-两者的关系：
+需要注意的是：在 AddLocalExchanges 所关注的 StreamProperties 中，我们只对其 ActualProperties 中的 localProperties 感兴趣。持有整个 ActualProperties
+对象只是因为 PropertyDerivations 要求输入类型为 ActualProperties。
+
+StreamProperties 和 ActualProperties 的关系如下所示：
 
 
-| 属性类型     | 关注维度     | 描述内容                   |
-| :------- | :--------- |:-----------------------|
-| StreamProperties | Pipeline 之间   | 数据如何分布在多个 Pipeline（AddLocalExchanges 专门关心）       |
-| ActualProperties   | Pipeline 内部 + 全局   | 完整的物理属性描述，包含分布、排序、常量等 |
+| 属性类型     | 关注维度                     | 描述内容                                  |
+| :------- |:-------------------------|:--------------------------------------|
+| StreamProperties | 数据流之间                    | 数据如何分布在多个数据流中（AddLocalExchanges 专门关心） |
+| ActualProperties   | 数据流内部 + 全局（节点之间，以及数据流之间） | 完整的物理属性描述，包含分布、排序、常量等                 |
 
 一个更准确的理解：
 
