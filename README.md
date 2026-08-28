@@ -34,6 +34,8 @@ This site shares my insights and deep dives into the architecture and implementa
 
 - **[Presto 查询引擎内核详解：Spill-to-Disk 执行](./zh/posts/2026-08-27-spill-to-disk-execution.md)** — *Presto Query Engine Kernel Deep Dive: Spill-to-Disk Execution*
 
+- **[Presto 查询引擎内核详解：AddExchanges——基于物理属性的全局数据分布规划](./zh/posts/2026-08-28-add-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddExchanges — Global Data Distribution Planning Based on Physical Properties*
+
 ---
 
 ## License
