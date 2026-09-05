@@ -38,6 +38,8 @@ PrestoDB Committer | Presto-Iceberg Code Owner | Apache Iceberg Contributor
 
 - **[Presto 查询引擎内核详解：AddExchanges——基于物理属性的全局数据分布规划](./posts/2026-08-28-add-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddExchanges — Global Data Distribution Planning Based on Physical Properties*
 
+- **[Presto 查询引擎内核详解：分布式调度模型](./posts/2026-09-05-sql-query-scheduler.md)** — *Presto Query Engine Kernel Deep Dive: Understanding the Distributed Query Scheduling*
+
 ---
 
 ## 联系方式

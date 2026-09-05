@@ -36,6 +36,8 @@ This site shares my insights and deep dives into the architecture and implementa
 
 - **[Presto 查询引擎内核详解：AddExchanges——基于物理属性的全局数据分布规划](./zh/posts/2026-08-28-add-exchanges.md)** — *Presto Query Engine Kernel Deep Dive: AddExchanges — Global Data Distribution Planning Based on Physical Properties*
 
+- **[Presto 查询引擎内核详解：分布式调度模型](./zh/posts/2026-09-05-sql-query-scheduler.md)** — *Presto Query Engine Kernel Deep Dive: Understanding the Distributed Query Scheduling*
+
 ---
 
 ## License
