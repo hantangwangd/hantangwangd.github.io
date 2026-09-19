@@ -40,6 +40,8 @@ PrestoDB Committer | Presto-Iceberg Code Owner | Apache Iceberg Contributor
 
 - **[Presto 查询引擎内核详解：分布式调度模型](./posts/2026-09-05-sql-query-scheduler.md)** — *Presto Query Engine Kernel Deep Dive: Understanding the Distributed Query Scheduling*
 
+- **[Presto 查询引擎内核详解：RemoteTask——Coordinator 如何驱动分布式查询执行](./posts/2026-09-19-remote-task.md)** — *Presto Query Engine Kernel Deep Dive: How the Coordinator Drives Distributed Execution*
+
 ---
 
 ## 联系方式

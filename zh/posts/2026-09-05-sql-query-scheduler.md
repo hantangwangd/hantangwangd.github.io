@@ -953,7 +953,7 @@ Section Ready 之后，ExecutionSchedule 决定当前哪些 Stage 可以开始�
 
 掌握这三个问题，SqlQueryScheduler 的主要代码结构也就基本串起来了。
 
-至于 NodePartitioningManager、BucketNodeMap、具体的 StageScheduler 实现，以及 RemoteTask 的通信机制，则属于下一层实现细节，可以在后续再深入。
+至于 NodePartitioningManager、BucketNodeMap、具体的 StageScheduler 实现，以及 RemoteTask 的通信及监控管理机制，则属于下一层实现细节，可以在后续再深入。
 
 
 ---
