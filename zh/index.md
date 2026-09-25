@@ -42,6 +42,8 @@ PrestoDB Committer | Presto-Iceberg Code Owner | Apache Iceberg Contributor
 
 - **[Presto 查询引擎内核详解：RemoteTask——Coordinator 如何驱动分布式查询执行](./posts/2026-09-19-remote-task.md)** — *Presto Query Engine Kernel Deep Dive: How the Coordinator Drives Distributed Execution*
 
+- **[Presto 查询引擎内核详解：优化器体系与 CBO 框架](./posts/2026-09-24-cbo-framework.md)** — *Presto Query Engine Kernel Deep Dive: Optimizer Architecture and the CBO Framework*
+
 ---
 
 ## 联系方式
